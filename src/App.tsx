@@ -27,7 +27,7 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSendMessage = (content: string) => {
+  const handleSendMessage = async (content: string) => {
     // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -39,16 +39,43 @@ function App() {
     setIsLoading(true)
 
     // Simulate AI response
-    setTimeout(() => {
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: getAIResponse(content),
-        role: 'assistant',
-        timestamp: new Date(),
-      }
-      setMessages((prev) => [...prev, aiMessage])
-      setIsLoading(false)
-    }, 1200)
+    try {
+  const response = await fetch("http://localhost:5000/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      message: content,
+    }),
+  });
+
+  const data = await response.json();
+
+  const aiMessage: Message = {
+    id: (Date.now() + 1).toString(),
+    content: data.reply,
+    role: 'assistant',
+    timestamp: new Date(),
+  };
+
+  setMessages((prev) => [...prev, aiMessage]);
+
+} catch (error) {
+  console.error(error);
+
+  const errorMessage: Message = {
+    id: (Date.now() + 1).toString(),
+    content: "Something went wrong.",
+    role: 'assistant',
+    timestamp: new Date(),
+  };
+
+  setMessages((prev) => [...prev, errorMessage]);
+
+} finally {
+  setIsLoading(false);
+}
   }
 
   const handleNewChat = () => {
