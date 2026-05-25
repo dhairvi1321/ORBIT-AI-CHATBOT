@@ -5,111 +5,151 @@ import ChatWindow from './components/ChatWindow'
 import InputBox from './components/InputBox'
 import { Message, ChatHistory } from './types'
 
-// Sample chat history data
+// Sample chat history
 const initialChatHistory: ChatHistory[] = [
-  { id: '1', title: 'Getting started with React', timestamp: new Date(), isActive: true },
-  { id: '2', title: 'Tailwind CSS best practices', timestamp: new Date(Date.now() - 86400000), isActive: false },
-  { id: '3', title: 'Building modern UIs', timestamp: new Date(Date.now() - 172800000), isActive: false },
-  { id: '4', title: 'AI integration patterns', timestamp: new Date(Date.now() - 259200000), isActive: false },
+  {
+    id: '1',
+    title: 'New Chat',
+    timestamp: new Date(),
+    isActive: true,
+  },
 ]
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hello! I'm Orbit AI, your intelligent assistant powered by advanced language models. How can I help you today?",
+      content:
+        "Hello! I'm Orbit AI. How can I help you today?",
       role: 'assistant',
       timestamp: new Date(),
     },
   ])
-  const [chatHistory, setChatHistory] = useState<ChatHistory[]>(initialChatHistory)
-  const [activeChatId, setActiveChatId] = useState<string>('1')
-  const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [isLoading, setIsLoading] = useState(false)
 
+  const [chatHistory, setChatHistory] =
+    useState<ChatHistory[]>(initialChatHistory)
+
+  const [activeChatId, setActiveChatId] =
+    useState<string>('1')
+
+  const [sidebarOpen, setSidebarOpen] =
+    useState(true)
+
+  const [isLoading, setIsLoading] =
+    useState(false)
+
+  // SEND MESSAGE FUNCTION
   const handleSendMessage = async (content: string) => {
-    // Add user message
+    if (!content.trim()) return
+
+    // User message
     const userMessage: Message = {
       id: Date.now().toString(),
-      content,
+      content: content,
       role: 'user',
       timestamp: new Date(),
     }
+
     setMessages((prev) => [...prev, userMessage])
+
     setIsLoading(true)
 
-    // Simulate AI response
     try {
-  const response = await fetch("http://localhost:5000/chat", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      message: content,
-    }),
-  });
+      const response = await fetch(
+        'http://localhost:5000/chat',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: content,
+          }),
+        }
+      )
 
-  const data = await response.json();
+      const data = await response.json()
 
-  const aiMessage: Message = {
-    id: (Date.now() + 1).toString(),
-    content: data.reply,
-    role: 'assistant',
-    timestamp: new Date(),
-  };
+      console.log(data)
 
-  setMessages((prev) => [...prev, aiMessage]);
+      // Gemini reply
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content:
+          data.reply ||
+          'No response received from AI.',
+        role: 'assistant',
+        timestamp: new Date(),
+      }
 
-} catch (error) {
-  console.error(error);
+      setMessages((prev) => [...prev, aiMessage])
+    } catch (error) {
+      console.error(error)
 
-  const errorMessage: Message = {
-    id: (Date.now() + 1).toString(),
-    content: "Something went wrong.",
-    role: 'assistant',
-    timestamp: new Date(),
-  };
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content:
+          'Failed to connect with Orbit AI.',
+        role: 'assistant',
+        timestamp: new Date(),
+      }
 
-  setMessages((prev) => [...prev, errorMessage]);
-
-} finally {
-  setIsLoading(false);
-}
+      setMessages((prev) => [...prev, errorMessage])
+    } finally {
+      setIsLoading(false)
+    }
   }
 
+  // NEW CHAT
   const handleNewChat = () => {
     const newChat: ChatHistory = {
       id: Date.now().toString(),
-      title: 'New conversation',
+      title: 'New Chat',
       timestamp: new Date(),
       isActive: true,
     }
-    setChatHistory((prev) => 
-      [newChat, ...prev.map(chat => ({ ...chat, isActive: false }))]
-    )
+
+    setChatHistory((prev) => [
+      newChat,
+      ...prev.map((chat) => ({
+        ...chat,
+        isActive: false,
+      })),
+    ])
+
     setActiveChatId(newChat.id)
+
     setMessages([
       {
         id: '1',
-        content: "Hello! I'm Orbit AI, your intelligent assistant powered by advanced language models. How can I help you today?",
+        content:
+          "Hello! I'm Orbit AI. How can I help you today?",
         role: 'assistant',
         timestamp: new Date(),
       },
     ])
   }
 
+  // SELECT CHAT
   const handleSelectChat = (chatId: string) => {
     setChatHistory((prev) =>
-      prev.map(chat => ({ ...chat, isActive: chat.id === chatId }))
+      prev.map((chat) => ({
+        ...chat,
+        isActive: chat.id === chatId,
+      }))
     )
+
     setActiveChatId(chatId)
   }
 
+  // DELETE CHAT
   const handleDeleteChat = (chatId: string) => {
-    setChatHistory((prev) => prev.filter(chat => chat.id !== chatId))
+    setChatHistory((prev) =>
+      prev.filter((chat) => chat.id !== chatId)
+    )
   }
 
+  // TOGGLE SIDEBAR
   const toggleSidebar = () => {
     setSidebarOpen((prev) => !prev)
   }
@@ -130,28 +170,25 @@ function App() {
       {/* Main Content */}
       <div className="relative z-10 flex flex-1 flex-col overflow-hidden">
         {/* Navbar */}
-        <Navbar onMenuClick={toggleSidebar} sidebarOpen={sidebarOpen} />
+        <Navbar
+          onMenuClick={toggleSidebar}
+          sidebarOpen={sidebarOpen}
+        />
 
         {/* Chat Window */}
-        <ChatWindow messages={messages} isLoading={isLoading} />
+        <ChatWindow
+          messages={messages}
+          isLoading={isLoading}
+        />
 
-        {/* Input Box */}
-        <InputBox onSendMessage={handleSendMessage} isLoading={isLoading} />
+        {/* Input */}
+        <InputBox
+          onSendMessage={handleSendMessage}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   )
-}
-
-// AI response generator for demo
-function getAIResponse(userMessage: string): string {
-  const responses = [
-    "That's an excellent question! Based on my analysis, I'd recommend starting with a clear understanding of the core concepts before diving into implementation. This approach helps build a solid foundation for more advanced topics.",
-    "I understand what you're looking for. The key insight here is to break down the problem into smaller, manageable components. Each piece can then be tackled systematically, leading to a more elegant solution.",
-    "Great point! There are several approaches we could take here. Let me outline the most effective strategy I've found: first, identify the core requirements, then design the architecture, and finally implement with iterative improvements.",
-    "I'd be happy to elaborate on that! The modern approach involves leveraging existing patterns while adapting them to your specific needs. This balance between convention and customization is crucial for maintainable code.",
-    "Interesting perspective! From a technical standpoint, the solution involves careful consideration of performance, scalability, and user experience. Would you like me to dive deeper into any of these aspects?",
-  ]
-  return responses[Math.floor(Math.random() * responses.length)]
 }
 
 export default App
